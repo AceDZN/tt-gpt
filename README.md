@@ -12,6 +12,10 @@ For more information, read the [plugin documentation from OpenAI](https://platfo
 - Filter games by query, language, and age group.
 - Retrieve game details including title, description, and images.
 
+## TinyTap GameSmith - ChatGPT Integration
+
+- [GameSmith GPT](https://chat.openai.com/g/g-gQr3Ots3d-tinytap-gamesmith)
+
 ## Getting Started
 
 ### Prerequisites
