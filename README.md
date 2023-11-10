@@ -54,6 +54,7 @@ Once the local server is running:
 
 Method: GET
 URL: ` /tinytap-games/:query`
+
 URL Params: query (string)
 Success Response: 200 OK with JSON object of games
 
@@ -61,13 +62,15 @@ Success Response: 200 OK with JSON object of games
 
 Method: GET
 URL: `/tinytap-games/:query/:page/:count`
+
 URL Params: query (string), page (string), count (string)
 Success Response: 200 OK with JSON object of games
 
 ### Fetch Games with Filters
 
 Method: GET
-URL: `/tinytap-games/:query/:language/:age/:page/:count``
+URL: `/tinytap-games/:query/:language/:age/:page/:count`
+
 URL Params: query (string), language (string), age (string), page (string), count (string)
 Success Response: 200 OK with JSON object of games
 
