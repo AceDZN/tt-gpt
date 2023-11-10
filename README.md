@@ -48,25 +48,34 @@ Once the local server is running:
 5. Enter localhost:5003 as the server URL, then select "Find manifest file".
 6. The plugin should now be installed and enabled!
 
-API Endpoints
-Fetch Games
-URL: ` /tinytap-games/:query``
+## API Endpoints
+
+### Fetch Games
+
 Method: GET
+URL: ` /tinytap-games/:query`
 URL Params: query (string)
 Success Response: 200 OK with JSON object of games
-Fetch Games with Pagination
-URL:  `/tinytap-games/:query/:page/:count``
+
+### Fetch Games with Pagination
+
 Method: GET
+URL: `/tinytap-games/:query/:page/:count`
 URL Params: query (string), page (string), count (string)
 Success Response: 200 OK with JSON object of games
-Fetch Games with Filters
-URL: `/tinytap-games/:query/:language/:age/:page/:count``
+
+### Fetch Games with Filters
+
 Method: GET
+URL: `/tinytap-games/:query/:language/:age/:page/:count``
 URL Params: query (string), language (string), age (string), page (string), count (string)
 Success Response: 200 OK with JSON object of games
-Contributing
+
+## Contributing
+
 Contributions are welcome! Please create a fork of this repository, make your changes in a new branch, and submit a pull request.
 
-License
+## License
+
 This project is licensed under the MIT License.
 
