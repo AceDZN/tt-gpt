@@ -1,0 +1,151 @@
+openapi: 3.0.1
+info:
+  title: TinyTap Educational Games
+  description: Get some educational games to play with your kid.
+  version: 'v1'
+servers:
+  - url: https://openaitests.oa.r.appspot.com/
+paths:
+  /hello/{name}:
+    get:
+      operationId: sayHello
+      summary: Say hello to the user
+      parameters:
+        - in: path
+          name: name
+          schema:
+            type: string
+          required: true
+          description: The name of the user.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/sayHelloResponse'
+  /tinytap-games/{query}:
+    get:
+      operationId: getTinytapGamesForQuery
+      summary: Get TinyTap games for a specific search query, allows pagination
+      parameters:
+        - in: path
+          name: query
+          schema:
+            type: string
+          required: true
+          description: The search query of the games the user requested.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/tinytapGamesResponse'
+  /tinytap-games/{query}/{page}/{count}:
+    get:
+      operationId: getTinytapGamesForQueryByPage
+      summary: Get TinyTap games for a specific search query, allows pagination
+      parameters:
+        - in: path
+          name: query
+          schema:
+            type: string
+          required: true
+          description: The search query of the games the user requested.
+        - in: path
+          name: page
+          schema:
+            type: string
+          required: true
+          description: Page number for the search, usually start with 1
+        - in: path
+          name: count
+          schema:
+            type: string
+          required: true
+          description: How many results per page? minimum 5
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/tinytapGamesResponse'
+  /tinytap-games/{query}/{language}/{age}/{page}/{count}:
+    get:
+      operationId: getTinytapGamesForQueryByLanguageAndAge
+      summary: Get TinyTap games for a specific search query by language and age, allows pagination
+      parameters:
+        - in: path
+          name: query
+          schema:
+            type: string
+          required: true
+          description: The search query of the games the user requested.
+        - in: path
+          name: language
+          schema:
+            type: string
+          required: true
+          description: the language abbrivation of the desired games, 'all' for all languages
+        - in: path
+          name: age
+          schema:
+            type: string
+          required: true
+          description: the age specific for the desired games
+        - in: path
+          name: page
+          schema:
+            type: string
+          required: true
+          description: Page number for the search, usually start with 1
+        - in: path
+          name: count
+          schema:
+            type: string
+          required: true
+          description: How many results per page? minimum 5
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/tinytapGamesResponse'
+
+components:
+  schemas:
+    sayHelloResponse:
+      type: object
+      properties:
+        hello:
+          type: string
+          description: Hello to the user
+    tinytapGamesResponse:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Games title
+        description:
+          type: string
+          description: Games description
+        games:
+          type: any
+          description: Games Array
+          properties:
+            title:
+              type: string
+              description: The game title
+            description:
+              type: string
+              description: The game description
+            url:
+              type: string
+              description: Link to the game
+            image:
+              type: string
+              description: The game cover image
+
