@@ -4,7 +4,7 @@ info:
   description: Get some educational games to play with your kid.
   version: 'v1'
 servers:
-  - url: https://openaitests.oa.r.appspot.com/
+  - url: https://acedzn-gpt.uc.r.appspot.com
 paths:
   /hello/{name}:
     get:
