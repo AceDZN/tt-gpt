@@ -11,18 +11,21 @@ const PORT = process.env.PORT || 5003 || 8080
 app.use(
   cors({
     origin: 'https://chat.openai.com',
-  }),
+  })
 )
 app.use(json())
 app.get('/', (req, res) => {
+  console.log('GET /')
   res.status(200).send(`I'm Alive`)
 })
 app.get('/hello/:name', (req, res) => {
   const name = req.params.name
+  console.log(`GET /hello/${name}`)
   res.status(200).send(`Hello ${name}! How are you?`)
 })
 
 const parseGamesData = (games: any[]) => {
+  console.log('parseGamesData', { games })
   return {
     title: 'TinyTap Games',
     description: 'TinyTap Games description',
@@ -105,6 +108,7 @@ const getLanguageValue = (language: string) => {
 }
 
 const gameResponse = async (url: string) => {
+  console.log('Generate Game Response', { url })
   try {
     const response = await axios.get(url)
     return parseGamesData(response.data.data)
@@ -117,6 +121,7 @@ const gameResponse = async (url: string) => {
 app.get('/tinytap-games/:query', async (req, res) => {
   const { query } = req.params
   const fixedUrl = `${SEARCH_BASE}/${query}?language=all&ageGroup=all&include_courses=0&ver=3.5&page_num=1&per_page=20`
+  console.log('GET /tinytap-games/:query', { query, fixedUrl })
   try {
     const gamesHtml = await gameResponse(fixedUrl)
     res.json(gamesHtml)
@@ -128,7 +133,7 @@ app.get('/tinytap-games/:query', async (req, res) => {
 app.get('/tinytap-games/:query/:page/:count', async (req, res) => {
   const { query, page, count } = req.params
   const fixedUrl = `${SEARCH_BASE}/${query}?language=all&ageGroup=all&include_courses=0&ver=3.5&page_num=${page}&per_page=${count}`
-
+  console.log('GET /tinytap-games/:query/:page/:count', { query, page, count, fixedUrl })
   try {
     const gamesHtml = await gameResponse(fixedUrl)
     res.json(gamesHtml)
@@ -142,7 +147,7 @@ app.get('/tinytap-games/:query/:language/:age/:page/:count', async (req, res) =>
   const fixedAge = getAgeValue(age)
   const fixedLanguage = getLanguageValue(language)
   const url = `${SEARCH_BASE}/${query}?language=${fixedLanguage}&ageGroup=${fixedAge}&include_courses=0&ver=3.5&page_num=${page}&per_page=${count}`
-
+  console.log('GET /tinytap-games/:query/:language/:age/:page/:count', { query, language, age, page, count, url })
   try {
     const gamesHtml = await gameResponse(url)
     res.json(gamesHtml)
