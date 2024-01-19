@@ -24,58 +24,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/sayHelloResponse'
-  /tinytap-games/{query}:
-    get:
-      operationId: getTinytapGamesForQuery
-      summary: Get TinyTap games for a specific search query, allows pagination
-      parameters:
-        - in: path
-          name: query
-          schema:
-            type: string
-          required: true
-          description: The search query of the games the user requested.
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/tinytapGamesResponse'
-  /tinytap-games/{query}/{page}/{count}:
-    get:
-      operationId: getTinytapGamesForQueryByPage
-      summary: Get TinyTap games for a specific search query, allows pagination
-      parameters:
-        - in: path
-          name: query
-          schema:
-            type: string
-          required: true
-          description: The search query of the games the user requested.
-        - in: path
-          name: page
-          schema:
-            type: string
-          required: true
-          description: Page number for the search, usually start with 1
-        - in: path
-          name: count
-          schema:
-            type: string
-          required: true
-          description: How many results per page? minimum 5
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/tinytapGamesResponse'
   /tinytap-games/{query}/{language}/{age}/{page}/{count}:
     get:
       operationId: getTinytapGamesForQueryByLanguageAndAge
-      summary: Get TinyTap games for a specific search query by language and age, allows pagination
+      summary: Get TinyTap games for a specific search query by language and age, allows pagination. you MUST provide a non-empty query string, if none provided by the user - pick a random topic that suits the rest of the request. Never use for TinyTapAI games.
       parameters:
         - in: path
           name: query
@@ -114,7 +66,60 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/tinytapGamesResponse'
-
+  /tinytap-games/market/{language}/{age}:
+    get:
+      operationId: getTinytapCollectionsByLanguageAndAge
+      summary: Get TinyTap collections by language and age, allows pagination. you MUST provide default 'all' value for language and age, if none provided by the user.
+      parameters:
+        - in: path
+          name: language
+          schema:
+            type: string
+          required: true
+          description: the language abbrivation of the desired games, 'all' for all languages
+        - in: path
+          name: age
+          schema:
+            type: string
+          required: true
+          description: the age specific for the desired games
+        - in: path
+          name: page
+          schema:
+            type: string
+          required: true
+          description: Page number for the search, usually start with 1
+        - in: path
+          name: count
+          schema:
+            type: string
+          required: true
+          description: How many results per page? minimum 5
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/tinytapGamesResponse'
+/tinytap-games/tinytap-ai/{term}:
+  get:
+    operationId: getTinytapAIGameForTerm
+    summary: Used to create dynamic TinyTapAI games. Get AI generated game for any term/topic.
+    parameters:
+      - in: path
+        name: term
+        schema:
+          type: string
+        required: true
+        description: The term used for the game creation, must be a real term that follows the 'wikipedia term' rules. you MUST provide a non-empty term string, if none provided - pick a random topic that suits the rest of the coversation.
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/tinytapAIGameResponse'
 components:
   schemas:
     sayHelloResponse:
@@ -123,6 +128,37 @@ components:
         hello:
           type: string
           description: Hello to the user
+    tinytapAIGameResponse:
+      type: object
+      properties:
+        ready:
+          type: boolean
+          description: the game generation readiness status. false means the game is still generating and be ready soon, you might want to try get it again in 20 seconds.
+        status:
+          type: number
+          description: the game generation status. 0: game creation started, 1: content creation, 2: audio generation, 3: image search, 4: packing, 5: game is ready to play.
+        term:
+          type: string
+          description: the term used to create the game.
+        related:
+          type: array
+          description: Array of terms related to the game
+        game:
+          type: any
+          description: The TinyTapAI Game object
+          properties:
+            title:
+              type: string
+              description: The game title
+            language:
+              type: string
+              description: The game's language
+            sections:
+              type: array
+              description: Array of sections in the game
+            cover_image:
+              type: string
+              description: The game cover image
     tinytapGamesResponse:
       type: object
       properties:

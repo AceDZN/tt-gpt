@@ -5,7 +5,15 @@ import axios from 'axios'
 import fs from 'fs'
 const TT_BASE = 'https://www.tinytap.com'
 const STORE_BASE = `${TT_BASE}/store/api`
+const MARKET_BASE = `${STORE_BASE}/market/?include_courses=1&language=1&ageGroup=2`
 const SEARCH_BASE = `${STORE_BASE}/content/search`
+const TINYTAP_AI_BASE = `${TT_BASE}/ai`
+const TINYTAP_AI_GAME_BASE = `${TINYTAP_AI_BASE}/game`
+const TINYTAP_LANGCHAIN_BASE = `https://langchain.tinytap.com`
+const TINYTAP_LANGCHAIN_COURSE_BASE = `${TINYTAP_LANGCHAIN_BASE}/course`
+const TINYTAP_LANGCHAIN_GAME_BASE = `${TINYTAP_LANGCHAIN_BASE}/game`
+const TINYTAP_LANGCHAIN_COVER_IMAGE_BASE = `${TINYTAP_LANGCHAIN_BASE}/cover_image`
+
 const app = express()
 const PORT = process.env.PORT || 5003 || 8080
 app.use(
@@ -24,30 +32,10 @@ app.get('/hello/:name', (req, res) => {
   res.status(200).send(`Hello ${name}! How are you?`)
 })
 
-const parseGamesData = (games: any[]) => {
-  console.log('parseGamesData', { games })
-  return {
-    title: 'TinyTap Games',
-    description: 'TinyTap Games description',
-    games: games
-      .filter((game) => game.modelName === 'AlbumStore')
-      .map((game) => {
-        const { name, description, link, cover_image } = game.album.fields
-        return {
-          title: name,
-          description: description,
-          url: link,
-          image: cover_image,
-        }
-      }),
-  }
-}
-
 const getAgeValue = (age: string | number) => {
   const validAges = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14']
   return validAges.includes(`${age}`) ? age : 'all'
 }
-
 const getLanguageValue = (language: string) => {
   const allLanguages = {
     all: 0,
@@ -106,7 +94,64 @@ const getLanguageValue = (language: string) => {
   } as any
   return allLanguages[language] || allLanguages['all'] // If language is not found, default to 'all'
 }
+const parseCollectionsData = (collections: any[]) => {
+  console.log('parseCollectionsData', { collections })
+  return {
+    title: 'TinyTap Collections',
+    description: 'TinyTap Featured Collections description',
+    collections: collections.map((game) => {
+      const { id, title, content, url, path } = game.album.fields
+      return {
+        id: id,
+        title: title,
+        endpoint: url,
+        url: `${TT_BASE}${path}`,
+        games: content
+          .filter((game: any) => game.modelName === 'AlbumStore')
+          .map((game: any) => {
+            const { id, age_group_text, likes_count, lang, premium_content, thumbnail } = game
+            return {
+              id: id,
+              age_group: age_group_text,
+              language: lang,
+              likes_count: likes_count,
+              premium: premium_content,
+              image: thumbnail,
+            }
+          }),
+      }
+    }),
+  }
+}
+const parseGamesData = (games: any[]) => {
+  console.log('parseGamesData', { games })
+  return {
+    title: 'TinyTap Games',
+    description: 'TinyTap Games description',
+    games: games
+      .filter((game) => game.modelName === 'AlbumStore')
+      .map((game) => {
+        const { name, description, link, cover_image } = game.album.fields
+        return {
+          title: name,
+          description: description,
+          url: link,
+          image: cover_image,
+        }
+      }),
+  }
+}
 
+const collectionsResponse = async (url: string) => {
+  console.log('Generate Collections Response', { url })
+  try {
+    const response = await axios.get(url)
+    return parseCollectionsData(response.data.data)
+  } catch (error) {
+    console.error('Error fetching collections:', error)
+    throw error
+  }
+}
 const gameResponse = async (url: string) => {
   console.log('Generate Game Response', { url })
   try {
@@ -152,6 +197,63 @@ app.get('/tinytap-games/:query/:language/:age/:page/:count', async (req, res) =>
     const gamesHtml = await gameResponse(url)
     res.json(gamesHtml)
   } catch (error) {
+    res.status(500).send('Error fetching games')
+  }
+})
+
+app.get('/tinytap-games/market/:language/:age', async (req, res) => {
+  const { language = 'all', age = 'all' } = req.params
+  const fixedAge = getAgeValue(age)
+  const fixedLanguage = getLanguageValue(language)
+  const url = `${MARKET_BASE}?language=${fixedLanguage}&ageGroup=${fixedAge}&include_courses=0&ver=3.5`
+  console.log('GET /tinytap-games/market/:language/:age', { language, age, url })
+  try {
+    const gamesHtml = await collectionsResponse(url)
+    res.json(gamesHtml)
+  } catch (error) {
+    res.status(500).send('Error fetching games')
+  }
+})
+app.get('/tinytap-games/tinytap-ai/:term', async (req, res) => {
+  const { term } = req.params
+  const courseUrl = `${TINYTAP_LANGCHAIN_COURSE_BASE}/?term=${term}`
+
+  try {
+    const courseResponse = await axios.get(courseUrl)
+    const units = courseResponse.data.units
+
+    if (units && units.length > 0 && units[0].status === 5) {
+      // Fetch game details
+      const gameDetailsUrl = `${TINYTAP_LANGCHAIN_GAME_BASE}/?term=${term}&unit_id=0`
+      const gameDetailsResponse = await axios.get(gameDetailsUrl)
+      const gameDetails = gameDetailsResponse.data.ai_game
+
+      // Fetch cover image
+      const coverImageUrl = `${TINYTAP_LANGCHAIN_COVER_IMAGE_BASE}/?term=${term}`
+      const coverImageResponse = await axios.get(coverImageUrl)
+      const coverImage = coverImageResponse.data.url
+
+      // Construct and send response
+      const response = {
+        ready: true,
+        term: term,
+        unit_id: 0,
+        game: { ...gameDetails, cover_image: coverImage },
+        related: gameDetailsResponse.data.related,
+      }
+      res.json(response)
+    } else if (units && units.length > 0 && units[0].status === 0) {
+      // Initialize game creation
+      await axios.get(`${TINYTAP_LANGCHAIN_GAME_BASE}/?term=${term}&unit_id=0`)
+
+      // Construct and send response
+      res.json({ ready: false, term: term, unit_id: 0, status: units[0].status })
+    } else {
+      // Game is not ready yet
+      res.json({ ready: false, term: term, unit_id: 0, status: units[0].status })
+    }
+  } catch (error) {
+    console.error('Error in /tinytap-games/tinytap-ai/:query:', error)
     res.status(500).send('Error fetching games')
   }
 })
