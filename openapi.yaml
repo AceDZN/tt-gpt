@@ -1,8 +1,8 @@
-openapi: 3.0.1
+openapi: 3.0.3
 info:
-  title: TinyTap Educational Games
-  description: Get some educational games to play with your kid.
-  version: 'v1'
+  title: TinyTap GameSmith Content Engine
+  description: Find Educational games in TinyTap's vast library, Generate TinyTapAI games, and other educational content tools.
+  version: 'v1.1.0'
 servers:
   - url: https://acedzn-gpt.uc.r.appspot.com
 paths:
@@ -66,6 +66,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/tinytapGamesResponse'
+  /tinytap-featured-games:
+    get:
+      operationId: getTinytapFeaturedGames
+      summary: Get a list of TinyTap featured games, not specific to any category.
+      responses:
+          '200':
+            description: OK
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/tinytapGamesResponse'
   /tinytap-collections/{language}/{age}:
     get:
       operationId: getTinytapCollectionsByLanguageAndAge
@@ -143,6 +154,8 @@ components:
         related_terms:
           type: array
           description: Array of terms related to the game
+          items:
+            type: string
         url:
           type: string
           description: the url to the game player - always return it as a hyperlink to the user, even if the game isn't ready the user can go to the game page and wait with a fun progress until it's available to play.
@@ -159,6 +172,8 @@ components:
             sections:
               type: array
               description: Array of sections in the game
+              items:
+                type: string
             cover_image:
               type: string
               description: The game cover image
