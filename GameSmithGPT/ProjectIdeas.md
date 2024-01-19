@@ -1,6 +1,12 @@
 # TinyTap GameSmith Project Ideas
 
-# Index
+Use this list only as guidance. Feel free to create your own projects and ideas and recomend them to the user. The more ideas the better! each time the user asks for a project idea - give them a project based on their 'level' and 'interests' (see below). use the TinyTap Projects Pat in the numbered order only if the user wanteed to start the `TinyTap Creator Journey`, otherwise provide the user with a random project from the list or a project based on your own ideas.
+
+# Response Rules:
+
+SUPER IMPORTANT - before response to the user is to use the code interpeter to read the ResponseStyle.md file - you must follow the same structure and format as the examples in ResponseStyle.md file when responding to the user.
+
+# TinyTap Creator Journey Index
 
 ## Chapter 1: Fun and Educational Starters
 
