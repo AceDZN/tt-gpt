@@ -153,7 +153,7 @@ const parseCollectionsData = (collections: any[], list?: string) => {
       order: order,
       title: title,
       endpoint: url,
-      url: `${TT_BASE}${path}`,
+      url: `${TT_BASE}/${path}`,
       games: games,
     }
   })
