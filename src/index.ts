@@ -95,45 +95,74 @@ const getLanguageValue = (language: string) => {
   } as any
   return allLanguages[language] || allLanguages['all'] // If language is not found, default to 'all'
 }
-const parseCollectionsData = (collections: any[]) => {
+const allowed_collections = [] as string[]
+const parseCollectionsData = (collections: any[], list?: string) => {
+  let collections_list = null as any
+  if (list?.length) {
+    collections_list = list.split(',')
+  }
+  let filteredCollections = null
+
+  if (collections_list?.length) {
+    filteredCollections = collections.filter((collection: any) => {
+      let isValid = false
+      for (let i = 0; i < collections_list.length; i++) {
+        const valid = collection.title.includes(collections_list[i])
+        if (valid) {
+          isValid = true
+          break
+        }
+      }
+      return isValid
+    })
+  } else {
+    filteredCollections = collections
+  }
+  const sortedCollections = filteredCollections.sort((a, b) => a.order - b.order)
+  const fixedCollections = sortedCollections.map((collection) => {
+    const { id, title, content, url, path, order } = collection
+    allowed_collections.push(title)
+    const games = content
+      .filter((game: any) => game.modelName === 'AlbumStore')
+      .map((game: any) => {
+        const {
+          id,
+          likes_count,
+          play_count,
+          album: { fields },
+        } = game
+
+        const { name, age_group_text, description, link, cover_image, languages } = fields
+
+        const response = {
+          id: id,
+          title: name,
+          description: description,
+          age_group: age_group_text,
+          language: languages[0].title,
+          play_count: play_count,
+          likes_count: likes_count,
+          image: cover_image,
+          url: link,
+        }
+        console.log('parseCollectionsData', { response })
+        return response
+      })
+    return {
+      id: id,
+      order: order,
+      title: title,
+      endpoint: url,
+      url: `${TT_BASE}${path}`,
+      games: games,
+    }
+  })
+
   return {
     title: 'TinyTap Collections',
     description: 'TinyTap Featured Collections description',
-    collections: collections.map((collection) => {
-      const { id, title, content, url, path } = collection
-      return {
-        id: id,
-        title: title,
-        endpoint: url,
-        url: `${TT_BASE}${path}`,
-        games: content
-          .filter((game: any) => game.modelName === 'AlbumStore')
-          .map((game: any) => {
-            const {
-              id,
-              likes_count,
-              play_count,
-              album: { fields },
-            } = game
-
-            const { name, age_group_text, description, link, cover_image, languages } = fields
-
-            const response = {
-              id: id,
-              title: name,
-              description: description,
-              age_group: age_group_text,
-              language: languages[0].title,
-              play_count: play_count,
-              likes_count: likes_count,
-              image: cover_image,
-              url: link,
-            }
-            console.log('parseCollectionsData', { response })
-            return response
-          }),
-      }
-    }),
+    collections: fixedCollections,
+    allowed_collections: allowed_collections,
   }
 }
 const parseGamesData = (games: any[]) => {
@@ -156,11 +185,11 @@ const parseGamesData = (games: any[]) => {
   }
 }
 
-const collectionsResponse = async (url: string) => {
+const collectionsResponse = async (url: string, list?: string) => {
   console.log('Generate Collections Response', { url })
   try {
     const response = await axios.get(url)
-    return parseCollectionsData(response.data.data)
+    return parseCollectionsData(response.data.data, list)
   } catch (error) {
     console.error('Error fetching collections:', error)
     throw error
@@ -223,8 +252,7 @@ app.get('/tinytap-games/:query/:language/:age/:page/:count', async (req, res) =>
     res.status(500).send(`Error fetching games for query: ${query} language: ${language} age:${age} and page: ${page}`)
   }
 })
-
-app.get('/tinytap-collections/:language/:age', async (req, res) => {
+app.get('/tinytap-collections/:language/:age/', async (req, res) => {
   const { language = 'all', age = 'all' } = req.params
   const fixedAge = getAgeValue(age)
   const fixedLanguage = getLanguageValue(language)
@@ -232,6 +260,19 @@ app.get('/tinytap-collections/:language/:age', async (req, res) => {
   console.log('GET /tinytap-games/market/:language/:age', { language, age, url })
   try {
     const gamesHtml = await collectionsResponse(url)
+    res.json(gamesHtml)
+  } catch (error) {
+    res.status(500).send(`Error fetching collections for language: ${language} and age: ${age}`)
+  }
+})
+app.get('/tinytap-collections/:language/:age/:collections', async (req, res) => {
+  const { language = 'all', age = 'all', collections = `Editors' Picks,New on TinyTap` } = req.params
+  const fixedAge = getAgeValue(age)
+  const fixedLanguage = getLanguageValue(language)
+  const url = `${MARKET_BASE}/?language=${fixedLanguage}&ageGroup=${fixedAge}&include_courses=0`
+  console.log('GET /tinytap-games/market/:language/:age', { language, age, url })
+  try {
+    const gamesHtml = await collectionsResponse(url, collections)
     res.json(gamesHtml)
   } catch (error) {
     res.status(500).send(`Error fetching games for language: ${language} and age: ${age}`)

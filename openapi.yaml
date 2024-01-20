@@ -6,28 +6,10 @@ info:
 servers:
   - url: https://acedzn-gpt.uc.r.appspot.com
 paths:
-  /hello/{name}:
-    get:
-      operationId: sayHello
-      summary: Say hello to the user
-      parameters:
-        - in: path
-          name: name
-          schema:
-            type: string
-          required: true
-          description: The name of the user.
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/sayHelloResponse'
   /tinytap-games/{query}/{language}/{age}/{page}/{count}:
     get:
       operationId: getTinytapGamesForQueryByLanguageAndAge
-      summary: Get TinyTap games for a specific search query by language and age, allows pagination. you MUST provide a non-empty query string, if none provided by the user - pick a random topic that suits the rest of the request. Never use for TinyTapAI games.
+      summary: Get TinyTap games for a specific search query by language and age, allows pagination.
       parameters:
         - in: path
           name: query
@@ -40,25 +22,25 @@ paths:
           schema:
             type: string
           required: true
-          description: the language abbrivation of the desired games, 'all' for all languages
+          description: The language abbreviation of the desired games, 'all' for all languages.
         - in: path
           name: age
           schema:
             type: string
           required: true
-          description: the age specific for the desired games
+          description: The age specific for the desired games.
         - in: path
           name: page
           schema:
             type: string
           required: true
-          description: Page number for the search, usually start with 1
+          description: Page number for the search, usually start with 1.
         - in: path
           name: count
           schema:
             type: string
           required: true
-          description: How many results per page? minimum 5
+          description: How many results per page? minimum 5.
       responses:
         '200':
           description: OK
@@ -77,42 +59,36 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/tinytapGamesResponse'
-  /tinytap-collections/{language}/{age}:
+  /tinytap-collections/{language}/{age}/{collections}:
     get:
       operationId: getTinytapCollectionsByLanguageAndAge
-      summary: Get TinyTap collections by language and age, allows pagination. you MUST provide default 'all' value for language and age, if none provided by the user.
+      summary: Get TinyTap collections by language and age, allows pagination.
       parameters:
         - in: path
           name: language
           schema:
             type: string
           required: true
-          description: the language abbrivation of the desired games, 'all' for all languages
+          description: The language abbreviation of the desired games, 'all' for all languages.
         - in: path
           name: age
           schema:
             type: string
           required: true
-          description: the age specific for the desired games
+          description: The age specific for the desired games.
         - in: path
-          name: page
+          name: collections
           schema:
             type: string
           required: true
-          description: Page number for the search, usually start with 1
-        - in: path
-          name: count
-          schema:
-            type: string
-          required: true
-          description: How many results per page? minimum 5
+          description: Comma seperated list of collections to fetch
       responses:
         '200':
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/tinytapGamesResponse'
+                $ref: '#/components/schemas/tinytapCollectionsResponse'
   /tinytap-ai-game/{term}:
     get:
       operationId: getTinytapAIGameForTerm
@@ -123,7 +99,7 @@ paths:
           schema:
             type: string
           required: true
-          description: The term used for the game creation, must be a real term that follows the 'wikipedia term' rules. you MUST provide a non-empty term string, if none provided - pick a random topic that suits the rest of the coversation.
+          description: The term used for the game creation, must be a real term that follows the 'wikipedia term' rules. the term should use underscores instead of spaces. never use spaces - even not in their encoded form (%20).
       responses:
         '200':
           description: OK
@@ -133,73 +109,108 @@ paths:
                 $ref: '#/components/schemas/tinytapAIGameResponse'
 components:
   schemas:
-    sayHelloResponse:
-      type: object
-      properties:
-        hello:
-          type: string
-          description: Hello to the user
     tinytapAIGameResponse:
       type: object
       properties:
         ready:
           type: boolean
-          description: the game generation readiness status. false means the game is still generating and be ready soon, you might want to try get it again in 20 seconds.
+          description: The game generation readiness status. false means the game is still generating and will be ready soon.
         status:
           type: number
-          description: the game generation status. 0-game creation started, 1-content creation, 2-audio generation, 3-image search, 4-packing, 5-game is ready to play.
+          description: The game generation status. 0-game creation started, 1-content creation, 2-audio generation, 3-image search, 4-packing, 5-game is ready to play.
         term:
           type: string
-          description: the term used to create the game.
+          description: The term used to create the game.
         related_terms:
           type: array
-          description: Array of terms related to the game
+          description: Array of terms related to the game.
           items:
             type: string
         url:
           type: string
-          description: the url to the game player - always return it as a hyperlink to the user, even if the game isn't ready the user can go to the game page and wait with a fun progress until it's available to play.
+          description: The URL to the game player - always return it as a hyperlink to the user.
         game:
-          type: any
-          description: The TinyTapAI Game object
+          type: object
+          description: The TinyTapAI Game object.
           properties:
             title:
               type: string
-              description: The game title
+              description: The game title.
             language:
               type: string
-              description: The game's language
+              description: The game's language.
             sections:
               type: array
-              description: Array of sections in the game
+              description: Array of sections in the game.
               items:
                 type: string
             cover_image:
               type: string
-              description: The game cover image
+              description: The game cover image.
     tinytapGamesResponse:
       type: object
       properties:
         title:
           type: string
-          description: Games title
+          description: Games title.
         description:
           type: string
-          description: Games description
+          description: Games description.
         games:
-          type: any
-          description: Games Array
-          properties:
-            title:
-              type: string
-              description: The game title
-            description:
-              type: string
-              description: The game description
-            url:
-              type: string
-              description: Link to the game
-            image:
-              type: string
-              description: The game cover image
+          type: array
+          description: Games Array.
+          items:
+            $ref: '#/components/schemas/tinytapGameResponse'
+    tinytapCollectionsResponse:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Collections title.
+        description:
+          type: string
+          description: Collections description.
+        collections:
+          type: array
+          description: Collections list.
+          items:
+            $ref: '#/components/schemas/tinytapCollectionResponse'
+    tinytapCollectionResponse:
+      type: object
+      properties:
+        id:
+          type: number
+          description: The collection id.
+        title:
+          type: string
+          description: The collection title.
+        description:
+          type: string
+          description: The collection description.
+        url:
+          type: string
+          description: Link to the collection.
+        content:
+          type: array
+          description: Collection games list.
+          items:
+            $ref: '#/components/schemas/tinytapGameResponse'
+    tinytapGameResponse:
+      type: object
+      properties:
+        id:
+          type: number
+          description: The game id.
+        title:
+          type: string
+          description: The game title.
+        description:
+          type: string
+          description: The game description.
+        url:
+          type: string
+          description: Link to the game.
+        image:
+          type: string
+          description: The game cover image.
 
